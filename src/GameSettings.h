@@ -1,3 +1,7 @@
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 800
+#define WINDOW_BACKGROUND sf::Color::White
 #define IS_VSYNC_ENABLED true
+#define FIELD_TOTAL_CELLS 3
+#define FIELD_PADDING 5.f
+#define EMPTY_FIELD_CHAR '_'
