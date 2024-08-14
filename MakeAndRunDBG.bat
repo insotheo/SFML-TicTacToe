@@ -2,5 +2,5 @@
 cd build
 cmake ..
 cmake --build . --config Debug
-start Debug\TestGame.exe
+start Debug\SFMLTicTacToe.exe
 cd ..
