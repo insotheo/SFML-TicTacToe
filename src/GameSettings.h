@@ -5,3 +5,5 @@
 #define FIELD_TOTAL_CELLS 3
 #define FIELD_PADDING 5.f
 #define EMPTY_FIELD_CHAR '_'
+#define X_FIELD_CHAR 'X'
+#define O_FIELD_CHAR 'O'
