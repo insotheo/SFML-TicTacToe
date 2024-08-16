@@ -1,7 +1,11 @@
-#include<iostream>
 #include <SFML/Graphics.hpp>
+#include <string>
+#include <sstream>
+#include <memory>
+#include <math.h>
 
 #include "GameSettings.h"
+#include "Log.h"
 
 char field[9];
 const sf::Vector2f sizeOfPlace{250, 250};
@@ -9,21 +13,26 @@ const sf::Vector2f sizeOfSymbol{200, 200};
 bool isFirstPlayer = true;
 bool isGameOver = false;
 int winnerIndex = -1; // 0 - X ; 1 - O ; 2 - X == O ;-1 - None
+float elapsedTime = -1;
 sf::Font font;
 sf::Text winnerText;
+sf::Clock timer;
 
 void newGame(){
     for(int i = 0; i < 9; ++i){
         field[i] = EMPTY_FIELD_CHAR;
     }
+    timer.restart();
     isGameOver = false;
     winnerIndex = -1;
+    logNewGame();
 }
 
 void finish(const int index){
     if(index == -1){
         return;
     }
+    elapsedTime = std::roundf(timer.getElapsedTime().asSeconds());
     winnerIndex = index;
     isGameOver = true;
 }
@@ -99,6 +108,7 @@ void play(int fieldIndex) {
     if (field[fieldIndex] == EMPTY_FIELD_CHAR) {
         field[fieldIndex] = isFirstPlayer ? X_FIELD_CHAR : O_FIELD_CHAR;
         isFirstPlayer = !isFirstPlayer;
+        logTheCourse(fieldIndex, field[fieldIndex]);
     }
 }
 
@@ -113,6 +123,7 @@ void handleInput(sf::RenderWindow* window) {
         for (int i = 0; i < 9; ++i) {
             if (sf::Keyboard::isKeyPressed(static_cast<sf::Keyboard::Key>(sf::Keyboard::Num1 + i))) {
                 play(i);
+                checkWinner();
             }
         }
     }
@@ -147,20 +158,21 @@ int main()
 {   
     #if _WIN32
         font.loadFromFile("C:\\Windows\\Fonts\\arial.ttf");
+        std::system("title Tic-Tac-Toe in SFML");
     #elif __APPLE__
         font.loadFromFile("/Library/Fonts/Arial.ttf");
     #else
     #error "This game works only on Windows or MacOS!"
     #endif
 
-    winnerText.setCharacterSize(34);
+    winnerText.setCharacterSize(24);
     winnerText.setFillColor(sf::Color::Black);
     winnerText.setFont(font);
 
     newGame();
 
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT),
-     "SFML - TicTacToe");
+     "SFML - TicTacToe", sf::Style::Titlebar);
     
     window.setVerticalSyncEnabled(IS_VSYNC_ENABLED);
 
@@ -177,35 +189,39 @@ int main()
 
         window.clear(WINDOW_BACKGROUND);
 
-        if(!isGameOver){
+        if(isGameOver == false){
             drawField(&window);
-            checkWinner();
         }        
         else{
-            winnerText.setPosition({window.getSize().x / 2, window.getSize().y / 2});
-            sf::String text;
+            std::unique_ptr<sf::String> text = std::make_unique<sf::String>();
             switch (winnerIndex)
             {
             case 0: // X
-                text = "X-player wins!\n";
+                *text = "X-player wins!\n";
                 break;
             
             case 1: // O
-                text = "O-player wins!\n";
+                *text = "O-player wins!\n";
                 break;
 
             case 2: // Both
-                text = "Draw!\n";
+                *text = "Draw!\n";
                 break;
             
             default:
                 break;
             }
-            text += "Press [esc] to close the game or press [R] to replay!";
-            winnerText.setString(text);
+            *text += "Press [esc] to close the game or press [R] to replay!\n";
+            std::unique_ptr<std::ostringstream> stream = std::make_unique<std::ostringstream>();
+            *stream << "Game finished in " << elapsedTime << " seconds!";
+            *text += stream->str();
+            winnerText.setString(*text);
+            winnerText.setPosition(sf::Vector2f{
+                (float)((window.getSize().x / 2) - winnerText.getGlobalBounds().width / 2),
+                (float)((window.getSize().y / 2) - winnerText.getGlobalBounds().height / 2)
+            });
             window.draw(winnerText);
         }
-
 
         window.display();
     }
